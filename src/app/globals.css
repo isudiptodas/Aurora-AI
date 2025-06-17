@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import "tailwindcss";
+@plugin "tailwindcss-motion";
+
+@font-face {
+  font-family: "NewYork";
+  src: url("/fonts/NewYork PERSONAL USE.otf") format("opentype");
+}
+@font-face {
+  font-family: "Conquer";
+  src: url("/fonts/Conquer.ttf") format("truetype");
+}
+@font-face {
+  font-family: "Abnes";
+  src: url("/fonts/Abnes.ttf") format("truetype");
+}
+
+@theme {
+  --font-NewYork: "NewYork", "sans-serif"; 
+  --font-Conquer: "Conquer", "sans-serif"; 
+  --font-Abnes: "Abnes", "sans-serif"; 
+  --font-Montserrat: "Montserrat", "sans-serif"; 
+}

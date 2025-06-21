@@ -20,7 +20,7 @@ function MenuBar({ theme, setTheme }: props) {
 
     return (
         <>
-            <div className={`${theme === 'dark' ? "bg-black" : "bg-white"} w-full fixed top-0 duration-150 ease-in-out border-b-2 border-cyan-700 rounded-b-4xl md:rounded-none flex justify-center lg:px-10 lg:justify-between shadow-lg items-center pt-4 md:pt-6 md:pb-5 pb-3`}>
+            <div className={`${theme === 'dark' ? "bg-black" : "bg-white"} w-full fixed top-0 duration-150 ease-in-out border-b-2 border-cyan-700 rounded-b-4xl md:rounded-none flex justify-center lg:px-10 lg:justify-between shadow-lg items-center pt-5 md:pt-6 md:pb-5 pb-4`}>
                 <p className={`text-xl font-Conquer ${theme === 'dark' ? "text-white" : "text-black"}`}>AURORA AI</p>
                 <div onClick={() => setVisible(!visible)} className={`flex lg:hidden flex-col absolute top-1/3 text-xl cursor-pointer right-5 justify-center items-center ${theme === 'dark' ? "text-white" : "text-black"}`}>
                     <span><MdOutlineSettings /></span>

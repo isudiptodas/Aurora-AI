@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
         const { name, email, password } = body;
 
         try {
-            const found = await User.findOne({ email });
+            const found = await User.findOne({email});
 
             if (found) {
                 return NextResponse.json({

@@ -27,7 +27,7 @@ function page() {
 
       if(res.status === 200){
         toast.dismiss(id);
-        router.push('/auth/login');
+        router.push('/user/home');
       }
     } catch (err: any) {
       toast.dismiss(id);
@@ -55,8 +55,8 @@ function page() {
         </div>
 
         <div className={`w-[90%] backdrop-blur-3xl rounded-lg sm:w-[70%] md:w-[60%] lg:w-[40%] z-30 flex flex-col justify-start items-center gap-2 py-4 px-4`}>
-          <input type="email" className={`w-full rounded-md lg:rounded-lg bg-white font-Montserrat px-3 py-2 outline-none`} placeholder="Enter email" />
-          <input type="text" className={`w-full rounded-md lg:rounded-lg bg-white font-Montserrat px-3 py-2 outline-none`} placeholder="Re enter password" />
+          <input onChange={(e) => setEmail(e.target.value)} type="email" className={`w-full rounded-md lg:rounded-lg bg-white font-Montserrat px-3 py-2 outline-none`} placeholder="Enter email" />
+          <input onChange={(e) => setPassword(e.target.value)} type="password" className={`w-full rounded-md lg:rounded-lg bg-white font-Montserrat px-3 py-2 outline-none`} placeholder="Enter password" />
           <p className={`w-full flex justify-center items-center gap-2 rounded-md lg:rounded-lg bg-gradient-to-r from-emerald-300 via-emerald-500 to-emerald-700 text-black py-2 cursor-pointer font-Montserrat`} onClick={login}>Enter <IoIosLogOut /></p>
         </div>
 

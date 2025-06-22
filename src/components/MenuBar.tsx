@@ -20,7 +20,7 @@ function MenuBar({ theme, setTheme }: props) {
 
     return (
         <>
-            <div className={`${theme === 'dark' ? "bg-black" : "bg-white"} w-full fixed top-0 duration-150 ease-in-out border-b-2 border-cyan-700 rounded-b-4xl md:rounded-none flex justify-center lg:px-10 lg:justify-between shadow-lg items-center pt-5 md:pt-6 md:pb-5 pb-4`}>
+            <div className={`${theme === 'dark' ? "bg-black" : "bg-white"} w-full z-50 fixed top-0 duration-150 ease-in-out border-b-2 border-cyan-700 rounded-b-4xl md:rounded-none flex justify-center lg:px-10 lg:justify-between shadow-lg items-center pt-5 md:pt-6 md:pb-5 pb-4`}>
                 <p className={`text-xl font-Conquer ${theme === 'dark' ? "text-white" : "text-black"}`}>AURORA AI</p>
                 <div onClick={() => setVisible(!visible)} className={`flex lg:hidden flex-col absolute top-1/3 text-xl cursor-pointer right-5 justify-center items-center ${theme === 'dark' ? "text-white" : "text-black"}`}>
                     <span><MdOutlineSettings /></span>
@@ -36,7 +36,7 @@ function MenuBar({ theme, setTheme }: props) {
             </div>
 
             {/* menu */}
-            <div className={`${visible ? "translate-y-0 " : "-translate-y-full"} lg:hidden duration-300 ease-in-out transition-all w-full backdrop-blur-3xl bg-cyan-400/10 z-30 h-auto py-5 flex flex-col justify-start items-start gap-3 border-b-2 border-cyan-800 rounded-b-4xl absolute top-0`}>
+            <div className={`${visible ? "translate-y-0 " : "-translate-y-full"} z-50 lg:hidden duration-300 ease-in-out transition-all w-full backdrop-blur-3xl bg-cyan-400/10 h-auto py-5 flex flex-col justify-start items-start gap-3 border-b-2 border-cyan-800 rounded-b-4xl absolute top-0`}>
                 <p className={`w-full text-start font-Montserrat px-5 text-2xl ${theme === 'dark' ? "text-white" : "text-black"}`}>Home</p>
                 <p className={`w-full text-start font-Montserrat px-5 text-2xl ${theme === 'dark' ? "text-white" : "text-black"}`}>Settings</p>
                 <p className={`w-full text-start font-Montserrat px-5 text-2xl ${theme === 'dark' ? "text-white" : "text-black"} flex justify-start items-center gap-2`} onClick={switchTheme}>Theme {theme === 'dark' ? <IoMdMoon className="opacity-50 duration-200 ease-in-out rotate-45" /> : <FaSun className="opacity-50 duration-200 ease-in-out rotate-45" />}</p>

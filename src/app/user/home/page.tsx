@@ -23,6 +23,11 @@ function page() {
   const [youtube, setYoutube] = useState('');
   const [web, setWeb] = useState('');
   const [name, setName] = useState('');
+  const [today, setToday] = useState('');
+  const [userEmail, setUserEmail] = useState('');
+
+  const days = ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'];
+  const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
 
   useEffect(() => {
     const storedTheme = localStorage.getItem('theme');
@@ -39,6 +44,13 @@ function page() {
 
   const createSet = async () => {
 
+    const date = new Date().getDate();
+    const month = months[new Date().getMonth()];
+    const day = days[new Date().getDay()];
+    const year = new Date().getFullYear();
+    const todayDate = `${day}, ${date} ${month} ${year}`;
+    setToday(`${day}, ${date} ${month} ${year}`);
+
     // pdf
     if (uploadOption === 'pdf') {
       if (!file || !name) {
@@ -46,17 +58,35 @@ function page() {
         return;
       }
 
+      if (name.includes(" ")) {
+        toast.error("Space not allowed in name");
+        return;
+      }
+
       let id = toast.loading("Creating");
-      const pdfText = '';
+      let pdfText = '';
 
       try {
+
+        const form = new FormData();
+        form.append('file', file);
+
+        const output = await axios.post(`https://api.apyhub.com/extract/text/pdf-file`, form, {
+          headers: {
+            'apy-token': `${process.env.NEXT_PUBLIC_APUHUB_API1}`,
+            'Content-Type': `multipart/form-data`
+          }
+        });
+
+        //console.log(output.data.data);
+
         const res = await axios.post(`/api/upload`, {
-          name, type: 'pdf', pdfText
+          name, type: 'pdf', pdfText: output.data.data, today: todayDate, userEmail, original: file?.name
         }, {
           withCredentials: true
         });
 
-        if(res.status === 200){
+        if (res.status === 200) {
           toast.dismiss(id);
           toast.success("New Set Created");
           setPopupVisible(false);
@@ -68,13 +98,13 @@ function page() {
       } catch (err: any) {
         if (err?.response && err?.response?.data) {
           toast.dismiss(id);
-          toast.error(err.response.data);
+          toast.error(err.response.data.message);
         }
         else {
           toast.error("Something went wrong");
         }
       }
-      finally{
+      finally {
         toast.dismiss(id);
       }
     }
@@ -85,16 +115,38 @@ function page() {
         return;
       }
 
+      if (name.includes(" ")) {
+        toast.error("Space not allowed in name");
+        return;
+      }
+
+      if (!web.startsWith("https://")) {
+        toast.error("Please enter valid web URL");
+        return;
+      }
+
       let id = toast.loading("Creating");
 
       try {
+
+        const result = await axios.get(`https://api.apyhub.com//extract/text/webpage`, {
+          params: {
+            url: web.trim()
+          }, headers: {
+            'Content-Type': 'application/json',
+            'apy-token': `${process.env.NEXT_PUBLIC_APUHUB_API1}`
+          }
+        });
+
+        //console.log(result.data.data);
+
         const res = await axios.post(`/api/upload`, {
-          name, web, type: 'web'
+          name, web: result.data.data, type: 'web', today: todayDate, userEmail, original: web
         }, {
           withCredentials: true
         });
 
-         if(res.status === 200){
+        if (res.status === 200) {
           toast.dismiss(id);
           toast.success("New Set Created");
           setPopupVisible(false);
@@ -106,13 +158,13 @@ function page() {
       } catch (err: any) {
         toast.dismiss(id);
         if (err?.response && err?.response?.data) {
-          toast.error(err.response.data);
+          toast.error(err.response.data.message);
         }
         else {
           toast.error("Something went wrong");
         }
       }
-      finally{
+      finally {
         toast.dismiss(id);
       }
     }
@@ -124,14 +176,24 @@ function page() {
         return;
       }
 
+      if (name.includes(" ")) {
+        toast.error("Space not allowed in name");
+        return;
+      }
+
+      if (!youtube.startsWith("https://")) {
+        toast.error("Please enter valid youtube URL");
+        return;
+      }
+
       let id = toast.loading("Creating");
 
       try {
         const res = await axios.post(`/api/upload`, {
-          name, youtube, type: 'youtube'
-        }, {withCredentials: true});
+          name, youtube: youtube.trim(), type: 'youtube', today: todayDate, userEmail
+        }, { withCredentials: true });
 
-         if(res.status === 200){
+        if (res.status === 200) {
           toast.dismiss(id);
           toast.success("New Set Created");
           setPopupVisible(false);
@@ -141,20 +203,37 @@ function page() {
           setYoutube('');
         }
       } catch (err: any) {
+        console.log(err);
         if (err?.response && err?.response?.data) {
           toast.dismiss(id);
-          toast.error(err.response.data);
+          toast.error(err.response.data.message);
         }
         else {
           toast.error("Something went wrong");
         }
       }
-      finally{
+      finally {
         toast.dismiss(id);
       }
     }
   }
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await axios.get(`/api/auth`, {
+          withCredentials: true
+        });
+
+        //console.log(res);
+        setUserEmail(res.data.found.email);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    fetchUser();
+  }, []);
 
   return (
     <>
@@ -163,7 +242,7 @@ function page() {
 
         {/* popup */}
         <div className={`${popupVisible ? "opacity-100 scale-100" : "opacity-0 scale-0"} duration-500 ease-in-out transition-all w-full h-full px-5 md:px-10 absolute z-30 backdrop-blur-3xl bg-black/40 flex flex-col justify-start pt-32 items-center`}>
-          <div className={`w-full md:w-[60%] lg:w-[40%] py-4 px-3 ${theme === 'dark' ? "bg-zinc-800" : "bg-white"} duration-200 ease-in-out flex flex-col justify-start items-center`}>
+          <div className={`w-full rounded-md lg:rounded-lg md:w-[60%] lg:w-[40%] py-4 px-3 ${theme === 'dark' ? "bg-zinc-800" : "bg-white"} duration-200 ease-in-out flex flex-col justify-start items-center`}>
             <p className={`${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out font-Montserrat pb-2 border-b-2 border-cyan-700 text-lg font-semibold`}>Create Your New Set</p>
             <div className={`w-full mt-8 mb-5 flex px-4 justify-center items-center gap-2`}>
               <span onClick={() => setUploadOption('pdf')} className={`font-Montserrat px-5 py-2 ${uploadOption === 'pdf' ? "border-b-2 border-cyan-500" : "border-b-0"} ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out flex justify-center items-center gap-2 cursor-pointer`}>PDF <FaFilePdf /></span>
@@ -173,20 +252,24 @@ function page() {
 
             {/* web */}
             <div className={`${uploadOption === 'web' ? "block" : "hidden"} w-full flex flex-col justify-center items-center gap-2`}>
-              <input onChange={(e) => setWeb(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3`} placeholder="www.wikipedia.com/stranger-things" />
+              <p className={` font-Montserrat text-center px-5 opacity-65 text-[10px] md:text-sm mt-1 mb-1 ${theme === 'dark' ? " text-white" : " text-black"} duration-200 ease-in-out`}>Please note that the amount of time required to process depends on the content of the website </p>
+
+              <input value={web} onChange={(e) => setWeb(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3`} placeholder="www.wikipedia.com/stranger-things" />
               <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-start w-full pt-3 pb-2`}>Name your set</p>
-              <input onChange={(e) => setName(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3 mb-2`} placeholder="This is my new set" />
-              <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-center w-full py-2 lg:py-3 bg-gradient-to-r from-purple-400 to-pink-600 cursor-pointer`} onClick={createSet}>Create</p>
-              <p onClick={() => setPopupVisible(false)} className={`${theme === 'dark' ? "bg-white text-red-500 font-semibold" : "bg-black text-red-500 font-semibold"} font-Montserrat text-center w-full py-2 lg:py-3 cursor-pointer`}>Cancel</p>
+              <input value={name} onChange={(e) => setName(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3 mb-2`} placeholder="This is my new set" />
+              <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-center w-full py-2 lg:py-3 bg-gradient-to-r from-purple-400 to-pink-600 cursor-pointer rounded-md lg:rounded-lg`} onClick={createSet}>Create</p>
+              <p onClick={() => setPopupVisible(false)} className={`${theme === 'dark' ? "bg-white text-red-500 font-semibold" : "bg-black text-red-500 font-semibold"} font-Montserrat text-center w-full py-2 lg:py-3 cursor-pointer rounded-md lg:rounded-lg`}>Cancel</p>
             </div>
 
             {/* youtube */}
             <div className={`${uploadOption === 'youtube' ? "block" : "hidden"} w-full flex flex-col justify-center items-center gap-2`}>
-              <input onChange={(e) => setYoutube(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3`} placeholder="https://www.youtube.com/link/to/video" />
+              <p className={` font-Montserrat text-center px-5 opacity-65 text-[10px] md:text-sm mt-1 mb-1 ${theme === 'dark' ? " text-white" : " text-black"} duration-200 ease-in-out`}>Please note that the amount of time required to process depends on the video length </p>
+
+              <input value={youtube} onChange={(e) => setYoutube(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3`} placeholder="https://www.youtube.com/link/to/video" />
               <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-start w-full pt-3 pb-2`}>Name your set</p>
-              <input onChange={(e) => setName(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3 mb-2`} placeholder="This is my new set" />
-              <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-center w-full py-2 lg:py-3 bg-gradient-to-r from-purple-400 to-pink-600 cursor-pointer`} onClick={createSet}>Create</p>
-              <p onClick={() => setPopupVisible(false)} className={`${theme === 'dark' ? "bg-white text-red-500 font-semibold" : "bg-black text-red-500 font-semibold"} font-Montserrat text-center w-full py-2 lg:py-3 cursor-pointer`}>Cancel</p>
+              <input value={name} onChange={(e) => setName(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3 mb-2`} placeholder="This is my new set" />
+              <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-center w-full py-2 lg:py-3 bg-gradient-to-r from-purple-400 to-pink-600 cursor-pointer rounded-md lg:rounded-lg`} onClick={createSet}>Create</p>
+              <p onClick={() => setPopupVisible(false)} className={`${theme === 'dark' ? "bg-white text-red-500 font-semibold" : "bg-black text-red-500 font-semibold"} rounded-md lg:rounded-lg font-Montserrat text-center w-full py-2 lg:py-3 cursor-pointer`}>Cancel</p>
             </div>
 
             {/* pdf */}
@@ -212,35 +295,36 @@ function page() {
               </div>
 
               <p className={`${file !== null ? "block" : "hidden"} font-Montserrat text-[10px] md:text-sm italic mt-1 ${theme === 'dark' ? " text-white" : " text-black"} duration-200 ease-in-out`}>{file?.name}</p>
+              <p className={` font-Montserrat text-center px-5 opacity-65 text-[10px] md:text-sm mt-1 ${theme === 'dark' ? " text-white" : " text-black"} duration-200 ease-in-out`}>Please note that the amount of time required to process depends on the pages and size of pdf</p>
 
               <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-start w-full pt-3 pb-2`}>Name your set</p>
-              <input onChange={(e) => setName(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3 mb-2`} placeholder="This is my new set" />
-              <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-center w-full py-2 lg:py-3 bg-gradient-to-r from-purple-400 to-pink-600 cursor-pointer`} onClick={createSet}>Create</p>
-              <p onClick={() => setPopupVisible(false)} className={`${theme === 'dark' ? "bg-white text-red-500 font-semibold" : "bg-black text-red-500 font-semibold"} font-Montserrat text-center w-full py-2 lg:py-3 cursor-pointer`}>Cancel</p>
+              <input value={name} onChange={(e) => setName(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3 mb-2`} placeholder="This is my new set" />
+              <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-center w-full py-2 lg:py-3 bg-gradient-to-r from-purple-400 to-pink-600 cursor-pointer rounded-md lg:rounded-lg`} onClick={createSet}>Create</p>
+              <p onClick={() => setPopupVisible(false)} className={`${theme === 'dark' ? "bg-white text-red-500 font-semibold" : "bg-black text-red-500 font-semibold"} font-Montserrat text-center w-full py-2 lg:py-3 cursor-pointer rounded-md lg:rounded-lg`}>Cancel</p>
             </div>
           </div>
         </div>
 
-        <div className={`mt-20 lg:hidden w-full flex justify-start items-center py-3 px-5 `}>
+        <div className={`mt-20 lg:hidden w-full flex justify-start items-center md:justify-center py-3 px-5 `}>
           <p onClick={() => setOption('pdf')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'pdf' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>PDF</p>
           <p onClick={() => setOption('youtube')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'youtube' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>YouTube URL</p>
           <p onClick={() => setOption('web')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'web' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>Web URl</p>
         </div>
 
-        <div className={`mt-20 hidden w-full lg:flex justify-start items-center py-3 px-5 lg:px-10 `}>
+        <div className={`mt-24 hidden w-full lg:flex justify-center items-center py-3 px-5 lg:px-10 `}>
           <p onClick={() => setOption('pdf')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'pdf' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>PDF</p>
           <p onClick={() => setOption('youtube')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'youtube' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>YouTube URL</p>
           <p onClick={() => setOption('web')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'web' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>Web URL</p>
         </div>
 
-        <div className={`w-full mt-3 flex flex-col md:flex-row justify-center items-center md:justify-start md:gap-3 px-4 py-2 md:px-8 lg:px-10`}>
+        <div className={`w-full mt-5 flex flex-col md:flex-row justify-center items-center md:gap-3 px-4 py-2 md:px-8 lg:px-10`}>
           <div className={`w-full flex relative md:w-[60%]`}>
-            <input type="text" className={`${theme === 'dark' ? "bg-zinc-700 text-white" : "bg-gray-200 text-black"} outline-none px-3 pr-11 py-4 w-full`} placeholder="Search your sets " />
+            <input type="text" className={`${theme === 'dark' ? "bg-zinc-700 text-white" : "bg-gray-200 text-black"} font-Montserrat outline-none px-3 pr-11 py-4 w-full rounded-md lg:rounded-lg`} placeholder="Search your sets " />
             <span className={`${theme === 'dark' ? "text-gray-300" : "text-gray-800"} absolute top-5 lg:text-xl right-8 cursor-pointer`}><IoSearchSharp /></span>
           </div>
 
-          <p className={` ${theme === 'dark' ? "text-white" : "text-black"} w-full text-sm lg:text-lg md:w-auto px-5 text-center font-bold mt-3 md:mt-0 py-3 md:py-4 cursor-pointer bg-gradient-to-br from-emerald-400 to-emerald-700 duration-200 ease-in-out font-Montserrat capitalize flex justify-center items-center gap-2`}>{filter} <LuArrowDownUp /></p>
-          <p onClick={() => setPopupVisible(true)} className={` ${theme === 'dark' ? "text-white" : "text-black"} w-full text-sm lg:text-lg md:w-auto px-5 text-center font-bold mt-3 md:mt-0 py-3 md:py-4 cursor-pointer bg-gradient-to-br from-purple-400 to-pink-700 duration-200 ease-in-out font-Montserrat flex justify-center items-center gap-2`}>Create New Set <MdOutlineMarkChatUnread /></p>
+          <p className={` text-white w-full text-sm lg:text-lg md:w-auto px-5 text-center font-bold mt-3 md:mt-0 py-3 md:py-4 cursor-pointer bg-gradient-to-br from-emerald-400 to-emerald-700 duration-200 ease-in-out font-Montserrat capitalize flex justify-center items-center gap-2 rounded-md lg:rounded-lg`}>{filter} <LuArrowDownUp /></p>
+          <p onClick={() => setPopupVisible(true)} className={` text-white w-full text-sm lg:text-lg md:w-auto px-5 text-center font-bold mt-3 md:mt-0 py-3 md:py-4 cursor-pointer bg-gradient-to-br from-purple-400 to-pink-700 duration-200 ease-in-out font-Montserrat flex justify-center items-center gap-2 rounded-md lg:rounded-lg`}>Create New Set <MdOutlineMarkChatUnread /></p>
         </div>
 
       </div>

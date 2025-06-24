@@ -6,7 +6,8 @@ const setSchema = new mongoose.Schema({
     setType: String,
     vectorCollectionName: String,
     dateCreated: String,
-    original: String
+    original: String,
+    chat: [{role: String, content: String}]
 });
 
 export const Set = mongoose.models.Set || mongoose.model('Set', setSchema);

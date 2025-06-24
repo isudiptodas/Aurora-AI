@@ -5,6 +5,7 @@ import { db } from "@/config/astraConnect";
 import { connectDb } from "@/config/connectDb";
 import OpenAI from "openai";
 import { Set } from "@/models/Set";
+import { CohereEmbeddings } from "@langchain/cohere";
 
 export async function POST(req: NextRequest) {
 
@@ -14,16 +15,22 @@ export async function POST(req: NextRequest) {
     const { type } = body;
 
     const OPENAI_API = process.env.OPENAI_API_KEY as string;
+    const COHERE_API = process.env.COHERE_API_KEY as string;
 
-    const openai = new OpenAI({
-        apiKey: OPENAI_API
+    // const openai = new OpenAI({
+    //     apiKey: OPENAI_API
+    // });
+
+    const cohere = new CohereEmbeddings({
+        apiKey: COHERE_API,
+        model: "embed-english-v3.0"
     });
 
     if (type === 'pdf') {
         const { name, pdfText, today, userEmail, original } = body;
 
         const splitter = new RecursiveCharacterTextSplitter({
-            chunkSize: 500,
+            chunkSize: 200,
             chunkOverlap: 20
         });
 
@@ -41,22 +48,23 @@ export async function POST(req: NextRequest) {
 
         const newCol = await db.createCollection(name, {
             vector: {
-                dimension: 1536,
+                dimension: 1024,
                 metric: 'dot_product'
             }
         });
 
         try {
             for (let text of result) {
-                const embedding = await openai.embeddings.create({
-                    model: "text-embedding-3-small",
-                    input: text,
-                    encoding_format: "float",
-                });
+                // const embedding = await openai.embeddings.create({
+                //     model: "text-embedding-3-small",
+                //     input: text,
+                //     encoding_format: "float",
+                // });
 
-                const embed = embedding.data[0].embedding;
+                const embedding = await cohere.embedQuery(text);
+
                 const resp = await newCol.insertOne({
-                    $vector: embed,
+                    $vector: embedding,
                     text: text
                 });
             }
@@ -74,9 +82,11 @@ export async function POST(req: NextRequest) {
 
             return NextResponse.json({
                 success: true,
-                message: "Successful"
+                message: "Successful",
+                data: newSet
             }, { status: 200 });
         } catch (err) {
+            console.log(err);
             return NextResponse.json({
                 success: false,
                 message: "Something went wrong"
@@ -100,28 +110,29 @@ export async function POST(req: NextRequest) {
 
             const newCol = await db.createCollection(name, {
                 vector: {
-                    dimension: 1536,
+                    dimension: 1024,
                     metric: 'dot_product'
                 }
             });
 
             const splitter = new RecursiveCharacterTextSplitter({
-                chunkSize: 500,
+                chunkSize: 200,
                 chunkOverlap: 20
             });
 
             const result = await splitter.splitText(web);
 
             for (let text of result) {
-                const embedding = await openai.embeddings.create({
-                    model: "text-embedding-3-small",
-                    input: text,
-                    encoding_format: "float",
-                });
+                // const embedding = await openai.embeddings.create({
+                //     model: "text-embedding-3-small",
+                //     input: text,
+                //     encoding_format: "float",
+                // });
 
-                const embed = embedding.data[0].embedding;
+                const embedding = await cohere.embedQuery(text);
+
                 const resp = await newCol.insertOne({
-                    $vector: embed,
+                    $vector: embedding,
                     text: text
                 });
             }
@@ -140,7 +151,8 @@ export async function POST(req: NextRequest) {
 
             return NextResponse.json({
                 success: true,
-                message: "Successful"
+                message: "Successful",
+                data: newSet
             }, { status: 200 });
         } catch (err) {
             console.log(`Error -> `, err);
@@ -163,7 +175,7 @@ export async function POST(req: NextRequest) {
 
             if (result && result[0].pageContent) {
                 const splitter = new RecursiveCharacterTextSplitter({
-                    chunkSize: 500,
+                    chunkSize: 200,
                     chunkOverlap: 20
                 });
 
@@ -181,21 +193,22 @@ export async function POST(req: NextRequest) {
 
                 const newCol = await db.createCollection(name, {
                     vector: {
-                        dimension: 1536,
+                        dimension: 1024,
                         metric: 'dot_product'
                     }
                 });
 
                 for (let text of output) {
-                    const embedding = await openai.embeddings.create({
-                        model: "text-embedding-3-small",
-                        input: text,
-                        encoding_format: "float",
-                    });
+                    // const embedding = await openai.embeddings.create({
+                    //     model: "text-embedding-3-small",
+                    //     input: text,
+                    //     encoding_format: "float",
+                    // });
 
-                    const embed = embedding.data[0].embedding;
+                    const embedding = await cohere.embedQuery(text);
+
                     const resp = await newCol.insertOne({
-                        $vector: embed,
+                        $vector: embedding,
                         text: text
                     });
                 }
@@ -214,6 +227,7 @@ export async function POST(req: NextRequest) {
                 return NextResponse.json({
                     success: true,
                     message: "Successfull",
+                    data: newSet
                 }, { status: 200 });
             }
 

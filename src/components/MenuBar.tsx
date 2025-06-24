@@ -48,6 +48,7 @@ function MenuBar({ theme, setTheme }: props) {
                     <p className={`text-lg font-Montserrat cursor-pointer hover:text-cyan-500 duration-200 ease-in-out flex justify-start items-center gap-2`} onClick={switchTheme}>Theme {theme === 'dark' ? <IoMdMoon className="opacity-50 duration-200 ease-in-out rotate-45" /> : <FaSun className="opacity-50 duration-200 ease-in-out rotate-45" />}</p>
                     <p className={`text-lg font-Montserrat cursor-pointer hover:text-cyan-500 duration-200 ease-in-out`}>About</p>
                     <p className={`text-lg font-Montserrat cursor-pointer hover:text-cyan-500 duration-200 ease-in-out`}>Privacy Policy</p>
+                    <p className={`text-lg font-Montserrat cursor-pointer hover:text-cyan-500 duration-200 ease-in-out`}>Usage</p>
                     <p className={`text-lg font-Montserrat cursor-pointer text-red-500 font-semibold duration-200 ease-in-out`} onClick={logout}>Logout</p>
                 </div>
             </div>
@@ -58,6 +59,7 @@ function MenuBar({ theme, setTheme }: props) {
                 <p className={`w-full text-start font-Montserrat px-5 text-2xl ${theme === 'dark' ? "text-white" : "text-black"} flex justify-start items-center gap-2`} onClick={switchTheme}>Theme {theme === 'dark' ? <IoMdMoon className="opacity-50 duration-200 ease-in-out rotate-45" /> : <FaSun className="opacity-50 duration-200 ease-in-out rotate-45" />}</p>
                 <p className={`w-full text-start font-Montserrat px-5 text-2xl ${theme === 'dark' ? "text-white" : "text-black"}`}>About</p>
                 <p className={`w-full text-start font-Montserrat px-5 text-2xl ${theme === 'dark' ? "text-white" : "text-black"}`}>Privacy Policy</p>
+                <p className={`w-full text-start font-Montserrat px-5 text-2xl ${theme === 'dark' ? "text-white" : "text-black"}`}>Usage</p>
                 <p className={`w-full text-start font-Montserrat px-5 text-2xl text-red-500 font-semibold`} onClick={logout}>Logout</p>
                 <p onClick={() => setVisible(false)} className={`w-full text-start font-Conquer px-5 py-5 text-xl opacity-60 ${theme === 'dark' ? "text-white" : "text-black"}`}>Close</p>
             </div>

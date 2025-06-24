@@ -11,8 +11,80 @@ import { FaYoutube } from "react-icons/fa";
 import { FaUpload } from "react-icons/fa6";
 import { toast } from "sonner";
 import axios from "axios";
+import { IoMdChatboxes } from "react-icons/io";
+import { FaRegTrashCan } from "react-icons/fa6";
+import { useRouter } from "next/navigation";
+
+interface setData {
+  setName: string,
+  userEmail: string,
+  setType: string,
+  vectorCollectionName: string,
+  dateCreated: string,
+  original: string,
+  chat?: [{ role: string, content: string }]
+}
 
 function page() {
+
+  const demoData = [
+    {
+      setName: `random_set_name`,
+      userEmail: `sudipto@gmail.com`,
+      setType: `pdf`,
+      vectorCollectionName: `random_set_name`,
+      dateCreated: `mon, 23 june 2025`,
+      original: `sudipto resume.pdf`,
+    },
+    {
+      setName: `random_set_name`,
+      userEmail: `sudipto@gmail.com`,
+      setType: `youtube`,
+      vectorCollectionName: `random_set_name`,
+      dateCreated: `mon, 23 june 2025`,
+      original: `sudipto resume.pdf`,
+    },
+    {
+      setName: `random_set_name`,
+      userEmail: `sudipto@gmail.com`,
+      setType: `web`,
+      vectorCollectionName: `random_set_name`,
+      dateCreated: `mon, 23 june 2025`,
+      original: `sudipto resume.pdf`,
+    },
+    {
+      setName: `random_set_name`,
+      userEmail: `sudipto@gmail.com`,
+      setType: `pdf`,
+      vectorCollectionName: `random_set_name`,
+      dateCreated: `mon, 23 june 2025`,
+      original: `sudipto resume.pdf`,
+    },
+    {
+      setName: `random_set_name`,
+      userEmail: `sudipto@gmail.com`,
+      setType: `pdf`,
+      vectorCollectionName: `random_set_name`,
+      dateCreated: `mon, 23 june 2025`,
+      original: `sudipto resume.pdf`,
+    },
+    {
+      setName: `random_set_name`,
+      userEmail: `sudipto@gmail.com`,
+      setType: `youtube`,
+      vectorCollectionName: `random_set_name`,
+      dateCreated: `mon, 23 june 2025`,
+      original: `sudipto resume.pdf`,
+    },
+    {
+      setName: `random_set_name`,
+      userEmail: `sudipto@gmail.com`,
+      setType: `web`,
+      vectorCollectionName: `random_set_name`,
+      dateCreated: `mon, 23 june 2025`,
+      original: `sudipto resume.pdf`,
+    },
+  ]
 
   const [theme, setTheme] = useState<string>('');
   const [option, setOption] = useState('pdf');
@@ -21,10 +93,12 @@ function page() {
   const [file, setFile] = useState<File | null>(null);
   const [popupVisible, setPopupVisible] = useState(false);
   const [youtube, setYoutube] = useState('');
+  const [allSets, setAllSets] = useState<setData[]>([]);
   const [web, setWeb] = useState('');
   const [name, setName] = useState('');
   const [today, setToday] = useState('');
   const [userEmail, setUserEmail] = useState('');
+  const router = useRouter();
 
   const days = ['sun', 'mon', 'tues', 'wed', 'thurs', 'fri', 'sat'];
   const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
@@ -35,6 +109,24 @@ function page() {
       setTheme(storedTheme);
     }
   }, []);
+
+  useEffect(() => {
+    const fetchSetData = async () => {
+      try {
+        const res = await axios.get(`/api/all-set/?user=${encodeURIComponent(userEmail)}`, {
+          withCredentials: true
+        });
+
+        if (res.status === 200) {
+          setAllSets(res.data.data);
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    fetchSetData();
+  }, [userEmail]);
 
   useEffect(() => {
     if (theme !== '') {
@@ -64,7 +156,6 @@ function page() {
       }
 
       let id = toast.loading("Creating");
-      let pdfText = '';
 
       try {
 
@@ -73,7 +164,7 @@ function page() {
 
         const output = await axios.post(`https://api.apyhub.com/extract/text/pdf-file`, form, {
           headers: {
-            'apy-token': `${process.env.NEXT_PUBLIC_APUHUB_API1}`,
+            'apy-token': `${process.env.NEXT_PUBLIC_APUHUB_API2}`,
             'Content-Type': `multipart/form-data`
           }
         });
@@ -87,6 +178,8 @@ function page() {
         });
 
         if (res.status === 200) {
+          const temp: setData = res.data.data;
+          setAllSets([...allSets, temp]);
           toast.dismiss(id);
           toast.success("New Set Created");
           setPopupVisible(false);
@@ -95,7 +188,10 @@ function page() {
           setWeb('');
           setYoutube('');
         }
+
+        //console.log(res);
       } catch (err: any) {
+        console.log(err);
         if (err?.response && err?.response?.data) {
           toast.dismiss(id);
           toast.error(err.response.data.message);
@@ -147,6 +243,8 @@ function page() {
         });
 
         if (res.status === 200) {
+          const temp: setData = res.data.data;
+          setAllSets([...allSets, temp]);
           toast.dismiss(id);
           toast.success("New Set Created");
           setPopupVisible(false);
@@ -194,6 +292,8 @@ function page() {
         }, { withCredentials: true });
 
         if (res.status === 200) {
+          const temp: setData = res.data.data;
+          setAllSets([...allSets, temp]);
           toast.dismiss(id);
           toast.success("New Set Created");
           setPopupVisible(false);
@@ -235,6 +335,40 @@ function page() {
     fetchUser();
   }, []);
 
+  const navigate = (setName: string) => {
+    const data = { setName };
+    router.push(`/user/chat/${setName}?data=${encodeURIComponent(JSON.stringify(data))}`);
+  }
+
+  useEffect(() => {
+    const filterType = () => {
+      if (option === 'youtube') {
+        const temp = allSets.filter((data) => {
+          return data.setType === 'youtube'
+        });
+
+        setAllSets(temp);
+      }
+      else if (option === 'web') {
+        const temp = allSets.filter((data) => {
+          return data.setType === 'web'
+        });
+
+        setAllSets(temp);
+      }
+      else if (option === 'pdf') {
+        const temp = allSets.filter((data) => {
+          return data.setType === 'pdf'
+        });
+
+        setAllSets(temp);
+      }
+    }
+
+    filterType();
+  }, [option]);
+
+
   return (
     <>
       <div className={`${theme === 'dark' ? "bg-black" : "bg-white"} duration-200 ease-in-out w-full min-h-screen flex flex-col justify-start items-center overflow-hidden relative`}>
@@ -256,7 +390,7 @@ function page() {
 
               <input value={web} onChange={(e) => setWeb(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3`} placeholder="www.wikipedia.com/stranger-things" />
               <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-start w-full pt-3 pb-2`}>Name your set</p>
-              <input value={name} onChange={(e) => setName(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3 mb-2`} placeholder="This is my new set" />
+              <input value={name} onChange={(e) => setName(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3 mb-2`} placeholder="My_new_set" />
               <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-center w-full py-2 lg:py-3 bg-gradient-to-r from-purple-400 to-pink-600 cursor-pointer rounded-md lg:rounded-lg`} onClick={createSet}>Create</p>
               <p onClick={() => setPopupVisible(false)} className={`${theme === 'dark' ? "bg-white text-red-500 font-semibold" : "bg-black text-red-500 font-semibold"} font-Montserrat text-center w-full py-2 lg:py-3 cursor-pointer rounded-md lg:rounded-lg`}>Cancel</p>
             </div>
@@ -267,7 +401,7 @@ function page() {
 
               <input value={youtube} onChange={(e) => setYoutube(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3`} placeholder="https://www.youtube.com/link/to/video" />
               <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-start w-full pt-3 pb-2`}>Name your set</p>
-              <input value={name} onChange={(e) => setName(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3 mb-2`} placeholder="This is my new set" />
+              <input value={name} onChange={(e) => setName(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3 mb-2`} placeholder="My_new_set" />
               <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-center w-full py-2 lg:py-3 bg-gradient-to-r from-purple-400 to-pink-600 cursor-pointer rounded-md lg:rounded-lg`} onClick={createSet}>Create</p>
               <p onClick={() => setPopupVisible(false)} className={`${theme === 'dark' ? "bg-white text-red-500 font-semibold" : "bg-black text-red-500 font-semibold"} rounded-md lg:rounded-lg font-Montserrat text-center w-full py-2 lg:py-3 cursor-pointer`}>Cancel</p>
             </div>
@@ -298,26 +432,14 @@ function page() {
               <p className={` font-Montserrat text-center px-5 opacity-65 text-[10px] md:text-sm mt-1 ${theme === 'dark' ? " text-white" : " text-black"} duration-200 ease-in-out`}>Please note that the amount of time required to process depends on the pages and size of pdf</p>
 
               <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-start w-full pt-3 pb-2`}>Name your set</p>
-              <input value={name} onChange={(e) => setName(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3 mb-2`} placeholder="This is my new set" />
+              <input value={name} onChange={(e) => setName(e.target.value)} type="text" className={`${theme === 'dark' ? "bg-black text-white" : "bg-gray-200 text-black"} rounded-md lg:rounded-lg w-full outline-none font-Montserrat text-sm px-3 py-2 lg:py-3 mb-2`} placeholder="My_new_set" />
               <p className={`${theme === 'dark' ? "text-white" : "text-black"} font-Montserrat text-center w-full py-2 lg:py-3 bg-gradient-to-r from-purple-400 to-pink-600 cursor-pointer rounded-md lg:rounded-lg`} onClick={createSet}>Create</p>
               <p onClick={() => setPopupVisible(false)} className={`${theme === 'dark' ? "bg-white text-red-500 font-semibold" : "bg-black text-red-500 font-semibold"} font-Montserrat text-center w-full py-2 lg:py-3 cursor-pointer rounded-md lg:rounded-lg`}>Cancel</p>
             </div>
           </div>
         </div>
 
-        <div className={`mt-20 lg:hidden w-full flex justify-start items-center md:justify-center py-3 px-5 `}>
-          <p onClick={() => setOption('pdf')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'pdf' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>PDF</p>
-          <p onClick={() => setOption('youtube')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'youtube' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>YouTube URL</p>
-          <p onClick={() => setOption('web')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'web' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>Web URl</p>
-        </div>
-
-        <div className={`mt-24 hidden w-full lg:flex justify-center items-center py-3 px-5 lg:px-10 `}>
-          <p onClick={() => setOption('pdf')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'pdf' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>PDF</p>
-          <p onClick={() => setOption('youtube')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'youtube' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>YouTube URL</p>
-          <p onClick={() => setOption('web')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'web' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>Web URL</p>
-        </div>
-
-        <div className={`w-full mt-5 flex flex-col md:flex-row justify-center items-center md:gap-3 px-4 py-2 md:px-8 lg:px-10`}>
+        <div className={`w-full mt-24 lg:mt-28 flex flex-col md:flex-row justify-center items-center md:gap-3 px-4 py-2 md:px-8 lg:px-10`}>
           <div className={`w-full flex relative md:w-[60%]`}>
             <input type="text" className={`${theme === 'dark' ? "bg-zinc-700 text-white" : "bg-gray-200 text-black"} font-Montserrat outline-none px-3 pr-11 py-4 w-full rounded-md lg:rounded-lg`} placeholder="Search your sets " />
             <span className={`${theme === 'dark' ? "text-gray-300" : "text-gray-800"} absolute top-5 lg:text-xl right-8 cursor-pointer`}><IoSearchSharp /></span>
@@ -326,6 +448,33 @@ function page() {
           <p className={` text-white w-full text-sm lg:text-lg md:w-auto px-5 text-center font-bold mt-3 md:mt-0 py-3 md:py-4 cursor-pointer bg-gradient-to-br from-emerald-400 to-emerald-700 duration-200 ease-in-out font-Montserrat capitalize flex justify-center items-center gap-2 rounded-md lg:rounded-lg`}>{filter} <LuArrowDownUp /></p>
           <p onClick={() => setPopupVisible(true)} className={` text-white w-full text-sm lg:text-lg md:w-auto px-5 text-center font-bold mt-3 md:mt-0 py-3 md:py-4 cursor-pointer bg-gradient-to-br from-purple-400 to-pink-700 duration-200 ease-in-out font-Montserrat flex justify-center items-center gap-2 rounded-md lg:rounded-lg`}>Create New Set <MdOutlineMarkChatUnread /></p>
         </div>
+
+        <div className={`mt-5 lg:hidden w-full flex justify-center items-center py-3 px-5 `}>
+          <p onClick={() => setOption('pdf')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'pdf' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>PDF</p>
+          <p onClick={() => setOption('youtube')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'youtube' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>YouTube URL</p>
+          <p onClick={() => setOption('web')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'web' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>Web URl</p>
+        </div>
+
+        <div className={`mt-5 hidden w-full lg:flex justify-center items-center py-3 px-5 lg:px-10 `}>
+          <p onClick={() => setOption('pdf')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'pdf' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>PDF</p>
+          <p onClick={() => setOption('youtube')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'youtube' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>YouTube URL</p>
+          <p onClick={() => setOption('web')} className={`w-auto ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out px-4 py-2 text-lg cursor-pointer font-Montserrat ${option === 'web' ? "border-b-4 border-cyan-600" : "border-b-0"}`}>Web URL</p>
+        </div>
+
+        <div className={`w-[90%] mt-5 md:mt-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 justify-items-center gap-5`}>
+          {allSets.length > 0 && allSets.map((set, index) => {
+            return <div key={index} className={`${theme === 'dark' ? "bg-zinc-800" : "bg-gray-200"} duration-200 ease-in-out w-full overflow-hidden rounded-md lg:rounded-lg flex flex-col justify-start items-center py-3 px-4`}>
+              <h1 className={`w-full text-start ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out font-Montserrat font-semibold text-xl pb-2`}>{set.setName}</h1>
+              <h1 className={`w-full text-start ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out font-Montserrat text-sm`}>Date created : {set.dateCreated}</h1>
+              <h1 className={`w-full text-start ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out font-Montserrat text-sm`}>Type : {set.setType}</h1>
+              <div className={`w-full flex justify-baseline mt-4 items-center gap-3`}>
+                <p className={`w-full rounded-md cursor-pointer ${theme === 'dark' ? "bg-white text-black" : "bg-black text-white"} font-Montserrat duration-200 text-center flex justify-center items-center gap-2 ease-in-out py-2`} onClick={() => { navigate(set.setName) }}>Chat <IoMdChatboxes /></p>
+                <p className={`w-full rounded-md cursor-pointer ${theme === 'dark' ? "bg-red-500 text-white" : "bg-red-500 text-white"} font-Montserrat duration-200 text-center flex justify-center items-center gap-2 ease-in-out py-2`}>Delete <FaRegTrashCan /></p>
+              </div>
+            </div>
+          })}
+        </div>
+
 
       </div>
     </>

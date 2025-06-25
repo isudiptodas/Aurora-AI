@@ -18,7 +18,7 @@ interface SetData {
   vectorCollectionName: string,
   dateCreated: string,
   original: string,
-  chat?: [{role: string, content: string}]
+  chat: {role: string, content: string}[] | []
 }
 
 const chats = [
@@ -88,7 +88,7 @@ function page() {
         }
 
         fetchSetData();
-    }, [set]);
+    }, []);
 
     const type = (type: string | undefined) => {
         if(type === 'youtube'){
@@ -122,6 +122,7 @@ function page() {
             if(res.status === 200){
                 toast.dismiss(id);
                 setInput('');
+                setData(res.data.data);
             }
         } catch (err) {
             console.log(err);
@@ -153,7 +154,7 @@ function page() {
                             
                             <div className={`w-full flex flex-col justify-start items-center overflow-y-auto gap-3 h-[80%] px-3 rounded-md lg:rounded-lg`}>
 
-                                {chats.map((chat, index) => {
+                                {(data?.chat ?? []).map((chat, index) => {
                                     return <div key={index} className={`w-full py-3 flex ${chat.role === 'user' ? "justify-end items-center" : "items-center justify-start"} gap-2`}>
                                         <span className={`${chat.role === 'ai' ? "block" : "hidden"} p-2 rounded-full bg-gradient-to-br from-indigo-400 via-purple-500 to-pink-500 text-white lg:text-xl`}><IoSparklesSharp/></span>
                                         <p className={`${chat.role === 'user' ? "bg-gradient-to-r from-cyan-400 to-cyan-600 rounded-b-lg rounded-tl-lg text-end text-white" : "text-start"} ${chat.role === 'ai' && theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out font-Montserrat text-sm md:text-lg w-[90%] md:w-[70%] py-3 px-3`}>{chat.content}</p>

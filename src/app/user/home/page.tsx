@@ -368,6 +368,25 @@ function page() {
     filterType();
   }, [option]);
 
+  const deleteSet = async (name: string) => {
+    try {
+      const res = await axios.delete(`/api/set?set=${name}`, {
+        withCredentials: true
+      });
+
+      if(res.status === 201){
+        toast.success("Set deleted");
+        const temp = allSets.filter((set) => {
+         return set.setName !== name 
+        });
+
+        setAllSets(temp);
+      }
+    } catch (err) {
+      console.log('Something went wrong');
+    }
+  }
+
 
   return (
     <>
@@ -469,7 +488,7 @@ function page() {
               <h1 className={`w-full text-start ${theme === 'dark' ? "text-white" : "text-black"} duration-200 ease-in-out font-Montserrat text-sm`}>Type : {set.setType}</h1>
               <div className={`w-full flex justify-baseline mt-4 items-center gap-3`}>
                 <p className={`w-full rounded-md cursor-pointer ${theme === 'dark' ? "bg-white text-black" : "bg-black text-white"} font-Montserrat duration-200 text-center flex justify-center items-center gap-2 ease-in-out py-2`} onClick={() => { navigate(set.setName) }}>Chat <IoMdChatboxes /></p>
-                <p className={`w-full rounded-md cursor-pointer ${theme === 'dark' ? "bg-red-500 text-white" : "bg-red-500 text-white"} font-Montserrat duration-200 text-center flex justify-center items-center gap-2 ease-in-out py-2`}>Delete <FaRegTrashCan /></p>
+                <p className={`w-full rounded-md cursor-pointer ${theme === 'dark' ? "bg-red-500 text-white" : "bg-red-500 text-white"} font-Montserrat duration-200 text-center flex justify-center items-center gap-2 ease-in-out py-2`} onClick={() => deleteSet(set.setName)}>Delete <FaRegTrashCan /></p>
               </div>
             </div>
           })}
